@@ -13,7 +13,7 @@ int main()
 
   using namespace boolean;
 
-  int const number_of_variables = 3;
+  int const number_of_variables = 2;
   std::vector<Variable> v;
   char const* const names[] = { "w", "x", "y", "z" };
   for (int i = 0; i < number_of_variables; ++i)
@@ -75,14 +75,15 @@ int main()
         if (term.inner_loop())
         {
           Expression original(products[term[0]]);
-          expressions.emplace_back(products[term[0]]);
+          bool need_simplify = false;
           for (int i = 1; i < n; ++i)
-          {
-            expressions.back() += products[term[i]];
-            original += products[term[i]];
-          }
+            need_simplify |= original.add(products[term[i]]);
+          expressions.emplace_back(original.copy());
           expressions.back().simplify();
-          if (original != expressions.back())
+          if (!need_simplify)
+            Dout(dc::notice, "Does not need simplify: " << original);
+          ASSERT(need_simplify || original == expressions.back());
+          if (1 || original != expressions.back())
           {
             Dout(dc::notice, original << " == " << expressions.back());
             ASSERT(expressions.back().equivalent(original));

@@ -33,7 +33,6 @@ int main()
     Dout(dc::notice, "... which is equivalent with 1");
   else
     Dout(dc::notice, "... which is not equivalent with 1");
-  return 0;
 
   // A̅BC̅D + ABC + ̅B̅CD + A̅B + ̅AC
   // AB'CD' + ABC + B'C'D + AB' + A' + C
