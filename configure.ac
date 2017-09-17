@@ -37,7 +37,7 @@ m4_include([cwm4/configure_ac_top.m4])
 #CW_DOXYGEN
 
 ### Uncomment this to add more configuration output files.
-#AC_CONFIG_FILES([src/Makefile] [boolean-expression-testsuite.pc])
+AC_CONFIG_FILES([src/Makefile])
 
 # Include cwm4 footer.
 m4_include([cwm4/configure_ac_bottom.m4])
