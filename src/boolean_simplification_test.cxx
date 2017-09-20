@@ -27,6 +27,14 @@ int main()
   Product const notC(vC, true);
   Product const notD(vD, true);
 
+  // abc + abc' = ab
+  // abd + ab = ab
+  // (abd + abc) + abc' = ...
+  Expression e3(Expression(A * B * C) + Expression(A * B * D));
+  Expression e4(A * B * notD);
+  e3 += e4;
+  return 0;
+
   Expression e2(Expression(D) + Expression(notD * notC) + Expression(C * notB) + Expression(B * A) + Expression(notA));
   Dout(dc::notice, "e2 = " << e2);
   if (e2.equivalent(Expression(1)))

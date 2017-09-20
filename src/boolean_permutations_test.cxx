@@ -1,8 +1,51 @@
 #include "sys.h"
 #include "debug.h"
 #include "boolean-expression/BooleanExpression.h"
+#include "boolean-expression/TruthProduct.h"
 #include "utils/MultiLoop.h"
 #include <iostream>
+#include <bitset>
+#include <algorithm>
+
+class TruthTable
+{
+  boolean::TruthProduct const m_truth_product;
+  uint64_t m_table;
+
+ public:
+  TruthTable(int number_of_booleans) : m_truth_product(number_of_booleans)
+  {
+    ASSERT(number_of_booleans <= 6);
+  }
+
+  void operator=(boolean::Expression const& expression);
+  friend bool operator<(TruthTable const& truth_table1, TruthTable const& truth_table2) { return truth_table1.m_table < truth_table2.m_table; }
+  bool operator==(TruthTable const& truth_table) { return m_table == truth_table.m_table; }
+  bool operator!=(TruthTable const& truth_table) { return m_table != truth_table.m_table; }
+  friend std::ostream& operator<<(std::ostream& os, TruthTable const& truth_table);
+};
+
+void TruthTable::operator=(boolean::Expression const& expression)
+{
+  boolean::TruthProduct tp(m_truth_product);
+  m_table = 0;
+  uint64_t bit = 1;
+  do
+  {
+    boolean::Expression evaluated_expression{expression(tp)};
+    ASSERT(evaluated_expression.is_literal());
+    m_table |= evaluated_expression.is_one() ? bit : 0;
+    bit <<= 1;
+  }
+  while(++tp != m_truth_product);
+}
+
+std::ostream& operator<<(std::ostream& os, TruthTable const& truth_table)
+{
+  std::bitset<64> bs(truth_table.m_table);
+  os << bs;
+  return os;
+}
 
 int main()
 {
@@ -13,11 +56,13 @@ int main()
 
   using namespace boolean;
 
-  int const number_of_variables = 2;
+  int const number_of_variables = 3;
   std::vector<Variable> v;
   char const* const names[] = { "w", "x", "y", "z" };
   for (int i = 0; i < number_of_variables; ++i)
     v.emplace_back(Context::instance().create_variable(names[i], i * i));
+
+  TruthTable truth_table(number_of_variables);
 
   std::vector<Product> products;
   //products.push_back(0);
@@ -60,6 +105,15 @@ int main()
   int const number_of_products = products.size();
 
   std::vector<Expression> expressions;
+  int index = -1;
+  std::map<TruthTable, int> m;
+
+  expressions.emplace_back(false);
+  truth_table = Expression::zero();
+  m.emplace(truth_table, ++index);
+  expressions.emplace_back(true);
+  truth_table = Expression::one();
+  m.emplace(truth_table, ++index);
 
   Dout(dc::notice, "Expressions:");
   for (int n = 1; n <= number_of_products; ++n)
@@ -78,15 +132,23 @@ int main()
           bool need_simplify = false;
           for (int i = 1; i < n; ++i)
             need_simplify |= original.add(products[term[i]]);
-          expressions.emplace_back(original.copy());
-          expressions.back().simplify();
           if (!need_simplify)
             Dout(dc::notice, "Does not need simplify: " << original);
+          expressions.emplace_back(original.copy());
+          truth_table = original;
+          Dout(dc::notice, original << ": " << truth_table);
+          m.emplace(truth_table, ++index);
+          expressions.back().simplify();
+          expressions.back().simplify();
           ASSERT(need_simplify || original == expressions.back());
-          if (1 || original != expressions.back())
+          if (original != expressions.back())
           {
-            Dout(dc::notice, original << " == " << expressions.back());
+            Dout(dc::notice, "simplify(" << original << ") --> " << expressions.back());
             ASSERT(expressions.back().equivalent(original));
+          }
+          if (expressions.back() != expressions[m[truth_table]])
+          {
+            std::cout << ' ' << original << " --> " << expressions.back() << " should be " << expressions[m[truth_table]] << '\n';
           }
         }
       }

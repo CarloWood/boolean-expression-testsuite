@@ -2,11 +2,11 @@
 #include "debug.h"
 #include "boolean-expression/TruthProduct.h"
 
+using namespace boolean;
+
 int main()
 {
-  using namespace boolean;
-
-  TruthProduct tp;
+  TruthProduct tp(2);
 
   Variable vA{Context::instance().create_variable("A", 0)};
   Variable vB{Context::instance().create_variable("B", 0)};
@@ -29,9 +29,6 @@ int main()
   e += not_B * C;
 
   std::cout << "e = " << e << std::endl;
-
-  tp *= B;
-  tp *= C;
 
   TruthProduct const end(tp);
   do
