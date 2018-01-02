@@ -54,6 +54,12 @@ int main()
 #endif
   Debug(NAMESPACE_DEBUG::init());
 
+  // Turn debug output off when compiled with optimization.
+#ifdef __OPTIMIZE__
+  Dout(dc::notice, "Compiled with optimization... turning debug output off to speed up execution.");
+  Debug(libcw_do.off());
+#endif
+
   using namespace boolean;
 
   int const number_of_variables = 3;
@@ -71,7 +77,7 @@ int main()
   for (int n = 1; n <= number_of_variables; ++n)
   {
     for (MultiLoop variable(n); !variable.finished(); variable.next_loop())
-      for(; variable() < number_of_variables; ++variable)
+      for(; variable() < number_of_variables; variable.start_next_loop_at(0))
       {
         if (*variable > 0 && variable() <= variable[*variable - 1])
         {
@@ -81,7 +87,7 @@ int main()
         if (variable.inner_loop())
         {
           for (MultiLoop inverted(n); !inverted.finished(); inverted.next_loop())
-            for(; inverted() < 2; ++inverted)
+            for(; inverted() < 2; inverted.start_next_loop_at(0))
             {
               if (inverted.inner_loop())
               {
@@ -119,7 +125,7 @@ int main()
   for (int n = 1; n <= number_of_products; ++n)
   {
     for (MultiLoop term(n); !term.finished(); term.next_loop())
-      for(; term() < number_of_products; ++term)
+      for(; term() < number_of_products; term.start_next_loop_at(0))
       {
         if (*term > 0 && term() <= term[*term - 1])
         {
